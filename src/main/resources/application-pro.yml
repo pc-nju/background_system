@@ -1,0 +1,40 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: bms
+  datasource:
+          name: test
+          #待修改
+          url: jdbc:mysql://127.0.0.1:3306/tomcat
+          username: root
+          password: root
+          driver-class-name: com.mysql.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            min-idle: 1
+            max-active: 50
+            max-wait: 60000
+            time-between-eviction-runs-millis: 60000
+            min-evictable-idle-time-millis: 300000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
+            test-on-borrow: false
+            test-on-return: false
+            pool-prepared-statements: false
+            max-pool-prepared-statement-per-connection-size: 20
+            filters: stat,wall,log4j
+            connection-properties: druid.stat.mergeSql=true
+            filter:
+              stat:
+                slow-sql-millis: 5000
+logging:
+  config: classpath:log/logback-spring.xml
+mybatis:
+  mapper-locations: classpath:mybatis/mappers/*.xml
+  type-aliases-package: com.bms.entity
+pagehelper:
+  offset-as-page-num: true
+  row-bounds-with-count: true
+  reasonable: true

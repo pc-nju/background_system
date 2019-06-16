@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bms.dao.RoleDao">
+    <resultMap id="RoleMap" type="Role">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="nameZh" jdbcType="VARCHAR" property="nameZh" />
+    </resultMap>
+    <insert id="insertRole" parameterType="Role" useGeneratedKeys="true" keyProperty="id" flushCache="true">
+        INSERT INTO	role(`name`,nameZh)VALUES(#{name},#{nameZh})
+    </insert>
+    <!--<select id="selectAllRoles" resultMap="RoleMap">-->
+        <!--SELECT id,`name`,nameZh FROM role WHERE name != '${@com.bms.util.FinalName@ROLE_ADMIN}'-->
+    <!--</select>-->
+    <select id="selectAllRoles" resultMap="RoleMap">
+        SELECT id,`name`,nameZh FROM role
+    </select>
+    <delete id="deleteRoleById" parameterType="Long">
+        DELETE FROM role WHERE id=#{id}
+    </delete>
+</mapper>

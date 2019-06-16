@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bms.dao.UserDao">
+    <resultMap id="UserMap" type="User">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="phone" jdbcType="VARCHAR" property="phone" />
+        <result column="telephone" jdbcType="VARCHAR" property="telephone" />
+        <result column="address" jdbcType="VARCHAR" property="address" />
+        <result column="enabled" jdbcType="BOOLEAN" property="enabled" />
+        <result column="username" jdbcType="VARCHAR" property="username" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="userface" jdbcType="VARCHAR" property="userface" />
+        <result column="remark" jdbcType="VARCHAR" property="remark" />
+    </resultMap>
+    <resultMap id="lazyLoadRolesMap" type="User" extends="UserMap">
+        <collection property="roles" ofType="Role" select="com.bms.dao.UserDao.getRolesById" column="id"/>
+    </resultMap>
+    <resultMap id="eagerLoadRolesMap" type="User" extends="UserMap">
+        <collection property="roles" ofType="Role">
+            <id column="rid" property="id"/>
+            <result column="rname" property="name"/>
+            <result column="rnameZh" property="nameZh"/>
+        </collection>
+    </resultMap>
+    <!--<insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id" flushCache="true">-->
+        <!--INSERT INTO	user(`name`,age)VALUES(#{name},#{age})-->
+    <!--</insert>-->
+    <select id="getRolesById" resultType="Role">
+        SELECT r.id,r.name,r.nameZh FROM role r,user_role ur WHERE r.id=ur.role_id AND ur.user_id=#{userId}
+    </select>
+    <select id="findUserByUsername" parameterType="String" resultMap="lazyLoadRolesMap">
+        SELECT id,name,username,password,userface,enabled FROM user WHERE username=#{username}
+    </select>
+
+    <!-- 因为PageHelper插件不支持1对多查询分页，所以这里需要用到懒加载，进行两次查询 -->
+    <select id="getUsersByKeyWords" parameterType="String" resultMap="lazyLoadRolesMap">
+        SELECT id,name,userface,phone,telephone,address,enabled,remark
+        FROM user
+        WHERE id NOT IN (
+        SELECT ur.user_id FROM user_role ur,role r
+        WHERE ur.role_id=r.id
+        AND r.name = '${@com.bms.util.FinalName@ROLE_ADMIN}'
+        )
+        <if test="keyWords != 'all'">
+            AND name LIKE concat('%',#{keyWords},'%')
+        </if>
+        ORDER BY id ASC
+    </select>
+
+    <select id="getUserById" parameterType="Long" resultMap="eagerLoadRolesMap">
+        SELECT u.id,u.name,u.userface,u.phone,u.telephone,u.address,u.enabled,u.remark,
+        r.id AS rid,r.nameZh AS rnameZh
+        FROM user u
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN role r ON ur.role_id = r.id
+        WHERE u.id = #{id}
+    </select>
+
+    <update id="updateUser" parameterType="User">
+        UPDATE user
+        <trim prefix="set" suffixOverrides=",">
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                name = #{name},
+            </if>
+            <if test="phone != null and !&quot;&quot;.equals(phone.trim())">
+                phone = #{phone},
+            </if>
+            <if test="telephone != null and !&quot;&quot;.equals(telephone.trim())">
+                telephone = #{telephone},
+            </if>
+            <if test="address != null and !&quot;&quot;.equals(address.trim())">
+                address = #{address},
+            </if>
+            <if test="enabled != null">
+                enabled = #{enabled},
+            </if>
+            <if test="username != null and !&quot;&quot;.equals(username.trim())">
+                username = #{username},
+            </if>
+            <if test="password != null and !&quot;&quot;.equals(password.trim())">
+                password = #{password},
+            </if>
+            <if test="userface != null and !&quot;&quot;.equals(userface.trim())">
+                userface = #{userface},
+            </if>
+            <if test="remark != null and !&quot;&quot;.equals(remark.trim())">
+                remark = #{remark},
+            </if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateUserRoles">
+        INSERT INTO user_role(user_id, role_id) VALUES
+            <foreach collection="roleIds" separator="," item="roleId">
+                (#{userId},#{roleId})
+            </foreach>
+    </update>
+
+    <delete id="deleteRolesByUserId" parameterType="Long">
+        DELETE FROM user_role WHERE user_id = #{userId}
+    </delete>
+</mapper>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bms.dao.MenuDao">
+    <resultMap id="MenuMap" type="Menu">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="url" jdbcType="VARCHAR" property="url" />
+        <result column="path" jdbcType="VARCHAR" property="path" />
+        <result column="component" jdbcType="VARCHAR" property="component" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="iconCls" jdbcType="VARCHAR" property="iconCls" />
+        <result column="parentId" jdbcType="INTEGER" property="parentId" />
+        <result column="enabled" jdbcType="BOOLEAN" property="enabled" />
+        <association property="meta" javaType="MenuMeta">
+            <result column="keepAlive" jdbcType="BOOLEAN" property="keepAlive"/>
+            <result column="requireAuth" jdbcType="BOOLEAN" property="requireAuth"/>
+        </association>
+        <collection property="roles" ofType="Role">
+            <id column="rid" property="id"/>
+            <result column="rname" property="name"/>
+            <result column="rnameZh" property="nameZh"/>
+        </collection>
+        <collection property="children" ofType="Menu">
+            <id column="id2" jdbcType="INTEGER" property="id" />
+            <result column="path2" jdbcType="VARCHAR" property="path" />
+            <result column="component2" jdbcType="VARCHAR" property="component" />
+            <result column="name2" jdbcType="VARCHAR" property="name" />
+            <result column="iconCls2" jdbcType="VARCHAR" property="iconCls" />
+            <association property="meta" javaType="MenuMeta">
+                <result column="keepAlive2" jdbcType="BOOLEAN" property="keepAlive"/>
+                <result column="requireAuth2" jdbcType="BOOLEAN" property="requireAuth"/>
+            </association>
+            <collection property="children" ofType="Menu">
+                <id column="id3" jdbcType="INTEGER" property="id" />
+                <result column="name3" jdbcType="VARCHAR" property="name" />
+            </collection>
+        </collection>
+    </resultMap>
+    <insert id="insertMenu" parameterType="Menu">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO menu
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="url != null and !&quot;&quot;.equals(url.trim())">
+                `url`,
+            </if>
+            <if test="path != null and !&quot;&quot;.equals(path.trim())">
+                path,
+            </if>
+            <if test="component != null and !&quot;&quot;.equals(component.trim())">
+                component,
+            </if>
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                name,
+            </if>
+            <if test="iconCls != null and !&quot;&quot;.equals(iconCls.trim())">
+                iconCls,
+            </if>
+            <if test="meta != null and meta.keepAlive != null">
+                keepAlive,
+            </if>
+            <if test="meta != null and meta.requireAuth != null">
+                requireAuth,
+            </if>
+            <if test="parentId != null">
+                parentId,
+            </if>
+            <if test="enabled != null">
+                enabled,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="url != null and !&quot;&quot;.equals(url.trim())">
+                #{url, jdbcType=VARCHAR},
+            </if>
+            <if test="path != null and !&quot;&quot;.equals(path.trim())">
+                #{path, jdbcType=VARCHAR},
+            </if>
+            <if test="component != null and !&quot;&quot;.equals(component.trim())">
+                #{component, jdbcType=INTEGER},
+            </if>
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                #{name, jdbcType=VARCHAR},
+            </if>
+            <if test="iconCls != null and !&quot;&quot;.equals(iconCls.trim())">
+                #{iconCls, jdbcType=VARCHAR},
+            </if>
+            <if test="meta != null and meta.keepAlive != null">
+                #{meta.keepAlive, jdbcType=BOOLEAN},
+            </if>
+            <if test="meta != null and meta.requireAuth != null">
+                #{meta.requireAuth, jdbcType=BOOLEAN},
+            </if>
+            <if test="parentId != null">
+                #{parentId, jdbcType=INTEGER},
+            </if>
+            <if test="enabled != null">
+                #{enabled, jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
+    <select id="getAllMenus" resultMap="MenuMap">
+        SELECT m.id,m.url,m.path,m.component,m.name,m.iconCls,m.parentId,m.enabled,m.keepAlive,m.requireAuth,
+        r.id AS rid,r.name AS rname,r.nameZh AS rnameZh
+        FROM menu m
+        LEFT JOIN menu_role mr ON m.id=mr.menu_id
+        LEFT JOIN role r ON mr.role_id=r.id
+        WHERE m.enabled=TRUE ORDER BY m.id DESC
+    </select>
+    <select id="getMenusByUserId" parameterType="Long" resultMap="MenuMap">
+        SELECT m1.id,m1.path,m1.component,m1.name,m1.keepAlive,m1.requireAuth,m1.iconCls,
+            m2.id AS id2,m2.path AS path2,m2.component AS component2,m2.name AS name2,
+            m2.keepAlive AS keepAlive2,m2.requireAuth AS requireAuth2,m2.iconCls AS iconCls2
+        FROM menu m1, menu m2
+        WHERE m1.id=m2.parentId
+              AND m1.id!=1
+              AND m2.id IN (SELECT mr.menu_id FROM menu_role mr,user_role ur WHERE mr.role_id=ur.role_id AND ur.user_id=#{userId})
+              AND m2.enabled=TRUE
+        ORDER BY m1.id,m2.id
+    </select>
+    <!-- 注意：若只有二级节点，没有三级节点，需要单独考虑，即：m1.id = 1 -->
+    <select id="getMenuTree" resultMap="MenuMap">
+        SELECT m1.id,m1.name,m2.id AS id2,m2.name AS name2,m3.id AS id3,m3.name AS name3
+        FROM menu m1,menu m2,menu m3
+        WHERE m1.id = m2.parentId
+              AND m2.id = m3.parentId
+              AND m3.enabled = TRUE
+        UNION
+        SELECT m1.id,m1.name,m2.id AS id2,m2.name AS name2, NULL ,NULL
+        FROM menu m1,menu m2
+        WHERE m1.id = m2.parentId AND m1.id = 1 AND m2.id NOT IN (
+            SELECT a.id FROM (
+                                 SELECT m2.id
+                                 FROM menu m1,menu m2,menu m3
+                                 WHERE m1.id = m2.parentId
+                                       AND m2.id = m3.parentId
+                                       AND m3.enabled = TRUE
+                             )a
+        )
+    </select>
+    <select id="getAllMenuIdsByRoleId" parameterType="Long">
+        SELECT menu_id FROM menu_role WHERE role_id=#{roleId}
+    </select>
+    <select id="selectMenu" parameterType="Menu" resultMap="MenuMap">
+        SELECT id FROM menu
+        <trim prefix="WHERE" suffixOverrides="AND">
+            <if test="id != null">
+                id = #{id, jdbcType=INTEGER} AND
+            </if>
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                name = #{name, jdbcType=VARCHAR} AND
+            </if>
+        </trim>
+    </select>
+    <delete id="deleteMenu" parameterType="Long">
+        DELETE FROM menu WHERE id = #{id}
+    </delete>
+</mapper>
