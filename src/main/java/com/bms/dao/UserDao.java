@@ -66,4 +66,25 @@ public interface UserDao {
      * @return 受影响的行数
      */
     int updateUserRoles(@Param("userId") Long userId, @Param("roleIds") Long[] roleIds);
+
+    /**
+     * 根据用户id查找用户
+     * @param id 用户id
+     * @return {@link User}
+     */
+    User selectUserById(@Param("id") Long id);
+
+    /**
+     * 根据用户id删除用户
+     * @param id 用户id
+     * @return 受影响的行数
+     */
+    int deleteUserById(@Param("id") Long id);
+
+    /**
+     * 查询用户
+     * @param user {@link User}
+     * @return {@link User}
+     */
+    User selectUser(User user);
 }

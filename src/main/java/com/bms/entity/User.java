@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
 
+import javax.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,13 +21,18 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User implements UserDetails {
     private Long id;
+    @NotBlank
     private String name;
+    @NotBlank
     private String phone;
     private String telephone;
+    @NotBlank
     private String address;
     private boolean enabled;
+    @NotBlank
     private String username;
-    @JsonIgnore
+//    @JsonIgnore
+    @NotBlank
     private String password;
     private String userface;
     private String remark;

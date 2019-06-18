@@ -70,4 +70,22 @@ public class SystemUserController {
         }
         return ResultDto.success("更新成功！");
     }
+    @DeleteMapping("/{id}")
+    public ResultDto removeUser(@PathVariable Long id) {
+        if (!userService.removeUser(id)) {
+            log.warn("删除id为[" + id + "]的用户失败！");
+            return ResultDto.error("删除失败！");
+        }
+        return ResultDto.success("删除成功！");
+    }
+    @PostMapping("/")
+    public ResultDto addUser(@RequestBody User user, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResultDto.error("前端参数有误！");
+        }
+        if (!userService.addUser(user)) {
+            return ResultDto.error("新增失败！");
+        }
+        return ResultDto.success("新增成功！");
+    }
 }

@@ -23,9 +23,70 @@
             <result column="rnameZh" property="nameZh"/>
         </collection>
     </resultMap>
-    <!--<insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id" flushCache="true">-->
-        <!--INSERT INTO	user(`name`,age)VALUES(#{name},#{age})-->
-    <!--</insert>-->
+    <insert id="insertUser" parameterType="User">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `user`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                `name`,
+            </if>
+            <if test="phone != null and !&quot;&quot;.equals(phone.trim())">
+                phone,
+            </if>
+            <if test="telephone != null and !&quot;&quot;.equals(telephone.trim())">
+                telephone,
+            </if>
+            <if test="address != null and !&quot;&quot;.equals(address.trim())">
+                address,
+            </if>
+            <if test="username != null and !&quot;&quot;.equals(username.trim())">
+                username,
+            </if>
+            <if test="password != null and !&quot;&quot;.equals(password.trim())">
+                password,
+            </if>
+            <if test="userface != null and !&quot;&quot;.equals(userface.trim())">
+                userface,
+            </if>
+            <if test="remark != null and !&quot;&quot;.equals(remark.trim())">
+                remark,
+            </if>
+            <if test="enabled != null">
+                enabled,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                #{name, jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null and !&quot;&quot;.equals(phone.trim())">
+                #{phone, jdbcType=VARCHAR},
+            </if>
+            <if test="telephone != null and !&quot;&quot;.equals(telephone.trim())">
+                #{telephone, jdbcType=VARCHAR},
+            </if>
+            <if test="address != null and !&quot;&quot;.equals(address.trim())">
+                #{address, jdbcType=VARCHAR},
+            </if>
+            <if test="username != null and !&quot;&quot;.equals(username.trim())">
+                #{username, jdbcType=VARCHAR},
+            </if>
+            <if test="password != null and !&quot;&quot;.equals(password.trim())">
+                #{password, jdbcType=VARCHAR},
+            </if>
+            <if test="userface != null and !&quot;&quot;.equals(userface.trim())">
+                #{userface, jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null and !&quot;&quot;.equals(remark.trim())">
+                #{remark, jdbcType=VARCHAR},
+            </if>
+            <if test="enabled != null">
+                #{enabled, jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
     <select id="getRolesById" resultType="Role">
         SELECT r.id,r.name,r.nameZh FROM role r,user_role ur WHERE r.id=ur.role_id AND ur.user_id=#{userId}
     </select>
@@ -101,4 +162,21 @@
     <delete id="deleteRolesByUserId" parameterType="Long">
         DELETE FROM user_role WHERE user_id = #{userId}
     </delete>
+    <select id="selectUserById" parameterType="Long" resultMap="eagerLoadRolesMap">
+        SELECT name FROM user WHERE id=#{id}
+    </select>
+    <delete id="deleteUserById" parameterType="Long">
+        DELETE FROM user WHERE id=#{id}
+    </delete>
+    <select id="selectUser" parameterType="User" resultMap="eagerLoadRolesMap">
+        SELECT id FROM user
+        <trim prefix="WHERE" suffixOverrides="AND">
+            <if test="id != null">
+                id = #{id} AND
+            </if>
+            <if test="username != null and !&quot;&quot;.equals(username.trim())">
+                username = #{username} AND
+            </if>
+        </trim>
+    </select>
 </mapper>

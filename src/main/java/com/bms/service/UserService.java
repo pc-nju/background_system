@@ -55,4 +55,18 @@ public interface UserService {
      * @return true：成功 false：失败
      */
     boolean updateUserRoles(Long userId, Long[] roleIds);
+
+    /**
+     * 根据用户id删除用户
+     * @param id 用户id
+     * @return {@code true}成功 {@code false}失败
+     */
+    boolean removeUser(Long id);
+
+    /**
+     * 新增用户
+     * @param user {@link User}
+     * @return {@code true} 成功 {@code false} 失败
+     */
+    boolean addUser(User user);
 }
