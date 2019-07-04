@@ -22,6 +22,7 @@
 		<log4j.version>1.2.17</log4j.version>
 		<mapstruct.version>1.2.0.Final</mapstruct.version>
 		<swagger.version>2.8.0</swagger.version>
+		<poi.version>3.17</poi.version>
 	</properties>
 
 	<dependencies>
@@ -135,6 +136,12 @@
 			<version>${swagger.version}</version>
 		</dependency>
 		<!-- swagger2  restful api 文档  end -->
+		<!-- 访问excel工具 -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>${poi.version}</version>
+		</dependency>
 
 
 		<!-- 单元测试 -->
