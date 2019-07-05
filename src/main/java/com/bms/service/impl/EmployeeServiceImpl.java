@@ -12,6 +12,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author 咸鱼
@@ -74,11 +76,15 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         PageHelper.startPage(employeeDto.getPageNum(), employeeDto.getPageSize());
         List<Employee> employees = employeeDao.getEmployees(employeeDto);
+
         PageInfo<Employee> employeePageInfo = new PageInfo<>(employees);
+        // 复制集合
+        ArrayList<Employee> copyEmployees = new ArrayList<>(employees);
+
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("total", employeePageInfo.getTotal());
-        employees.forEach(this::calculateWorkAge);
-        resultMap.put("employees", employees);
+        copyEmployees.forEach(this::calculateWorkAge);
+        resultMap.put("employees", copyEmployees);
         return resultMap;
     }
 
