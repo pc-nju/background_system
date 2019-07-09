@@ -96,7 +96,7 @@
 
     <!-- 因为PageHelper插件不支持1对多查询分页，所以这里需要用到懒加载，进行两次查询 -->
     <select id="getUsersByKeyWords" parameterType="String" resultMap="lazyLoadRolesMap">
-        SELECT id,name,userface,phone,telephone,address,enabled,remark
+        SELECT id,name,userface,phone,telephone,address,enabled,username,remark
         FROM user
         WHERE id NOT IN (
         SELECT ur.user_id FROM user_role ur,role r
