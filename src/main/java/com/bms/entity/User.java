@@ -78,4 +78,13 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return this.enabled;
     }
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof User && this.username.equals(((User) o).getUsername());
+    }
+
+    @Override
+    public int hashCode() {
+        return this.username.hashCode();
+    }
 }
