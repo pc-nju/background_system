@@ -69,4 +69,10 @@ public interface UserService {
      * @return {@code true} 成功 {@code false} 失败
      */
     boolean addUser(User user);
+
+    /**
+     * 获取所有{@link User}
+     * @return {@link User}集合
+     */
+    List<User> getAllUsers();
 }

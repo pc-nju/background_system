@@ -84,7 +84,7 @@ public interface UserDao {
     /**
      * 查询用户
      * @param user {@link User}
-     * @return {@link User}
+     * @return {@link User}集合
      */
-    User selectUser(User user);
+    List<User> selectUser(User user);
 }

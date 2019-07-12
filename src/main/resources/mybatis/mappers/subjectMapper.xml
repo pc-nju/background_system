@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bms.dao.SubjectDao">
+    <resultMap id="SubjectMap" type="Subject">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="create_time" jdbcType="DATE" property="createTime" />
+    </resultMap>
+    <insert id="insertSubject" parameterType="Subject">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `subject`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                `name`,
+            </if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                #{name, jdbcType=VARCHAR},
+            </if>
+            NOW(),
+        </trim>
+    </insert>
+
+    <select id="selectSubject" parameterType="Subject" resultMap="SubjectMap">
+        SELECT id,name,create_time FROM subject
+        <trim prefix="WHERE" suffixOverrides="AND">
+            <if test="id != null">
+                id = #{id} AND
+            </if>
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                name = #{name} AND
+            </if>
+        </trim>
+        ORDER BY id ASC
+    </select>
+
+    <update id="updateSubject" parameterType="Subject">
+        UPDATE subject SET name = #{name} WHERE id=#{id}
+    </update>
+
+    <delete id="deleteSubject" parameterType="Long">
+        DELETE FROM subject WHERE id = #{id}
+    </delete>
+
+</mapper>

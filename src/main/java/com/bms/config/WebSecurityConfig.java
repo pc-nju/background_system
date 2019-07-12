@@ -90,6 +90,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 //关闭 csfr，解决POST报403错误
                 .csrf().disable()
                 .exceptionHandling().accessDeniedHandler(deniedHandler);
-
+                http.sessionManagement().maximumSessions(1).expiredUrl("/login");
     }
 }

@@ -33,7 +33,6 @@ public class User implements UserDetails {
     private boolean enabled;
     @NotBlank
     private String username;
-//    @JsonIgnore
     @NotBlank
     private String password;
     private String userface;
@@ -79,5 +78,15 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return this.enabled;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof User && this.username.equals(((User) o).getUsername());
+    }
+
+    @Override
+    public int hashCode() {
+        return this.username.hashCode();
     }
 }

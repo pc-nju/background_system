@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -84,7 +85,7 @@ public class UserServiceImpl implements UserService {
     public boolean addUser(User user) {
         User tempUser = new User();
         tempUser.setUsername(user.getUsername());
-        if (selectUser(tempUser) != null) {
+        if (!CollectionUtils.isEmpty(selectUser(tempUser))) {
             throw new BaseException("用户名已存在，请重新设置！");
         }
         // 和 WebSecurityConfig 密码配置策略相一致
@@ -93,7 +94,14 @@ public class UserServiceImpl implements UserService {
         user.setUserface(FinalName.DEFAULT_USER_FACE);
         return userDao.insertUser(user) == 1;
     }
-    private User selectUser(User user) {
+
+    @Override
+    public List<User> getAllUsers() {
+        return selectUser(new User());
+    }
+
+
+    private List<User> selectUser(User user) {
         return userDao.selectUser(user);
     }
 }

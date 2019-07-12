@@ -169,7 +169,7 @@
         DELETE FROM user WHERE id=#{id}
     </delete>
     <select id="selectUser" parameterType="User" resultMap="eagerLoadRolesMap">
-        SELECT id FROM user
+        SELECT id,name FROM user
         <trim prefix="WHERE" suffixOverrides="AND">
             <if test="id != null">
                 id = #{id} AND
@@ -178,5 +178,6 @@
                 username = #{username} AND
             </if>
         </trim>
+        ORDER BY id ASC
     </select>
 </mapper>
