@@ -135,6 +135,10 @@
 			<version>${swagger.version}</version>
 		</dependency>
 		<!-- swagger2  restful api 文档  end -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
 
 
 		<!-- 单元测试 -->
