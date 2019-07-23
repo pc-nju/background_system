@@ -48,6 +48,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
+        // "/static/**"：所有的js、css等静态资源在打包时都已放入static文件夹，这些资源需要忽略验证
         web.ignoring().antMatchers("/index.html", "/static/**", "/login_p");
     }
 
