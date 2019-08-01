@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bms.dao.PeriodDao">
-    <resultMap id="PeriodMap" type="Period">
+<mapper namespace="com.bms.dao.ClassroomDao">
+    <resultMap id="ClassroomMap" type="Classroom">
         <id column="id" jdbcType="INTEGER" property="id" />
         <result column="name" jdbcType="VARCHAR" property="name" />
         <result column="create_time" jdbcType="DATE" property="createTime" />
     </resultMap>
-    <insert id="insertPeriod" parameterType="Period">
+    <insert id="insertClassroom" parameterType="Classroom">
         <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
             SELECT LAST_INSERT_ID()
         </selectKey>
-        INSERT INTO `period`
+        INSERT INTO `classroom`
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="name != null and !&quot;&quot;.equals(name.trim())">
                 `name`,
@@ -21,12 +21,12 @@
             <if test="name != null and !&quot;&quot;.equals(name.trim())">
                 #{name, jdbcType=VARCHAR},
             </if>
-            NOW(),
+            NOW()
         </trim>
     </insert>
 
-    <select id="selectPeriod" parameterType="Period" resultMap="PeriodMap">
-        SELECT id,name FROM period
+    <select id="selectClassroom" parameterType="Classroom" resultMap="ClassroomMap">
+        SELECT id,name FROM classroom
         <trim prefix="WHERE" suffixOverrides="AND">
             <if test="id != null">
                 id = #{id} AND
@@ -38,12 +38,12 @@
         ORDER BY id ASC
     </select>
 
-    <update id="updatePeriod" parameterType="Period">
-        UPDATE period SET name = #{name} WHERE id=#{id}
+    <update id="updateClassroom" parameterType="Classroom">
+        UPDATE classroom SET name = #{name} WHERE id=#{id}
     </update>
 
-    <delete id="deletePeriod" parameterType="Long">
-        DELETE FROM period WHERE id = #{id}
+    <delete id="deleteClassroom" parameterType="Long">
+        DELETE FROM classroom WHERE id = #{id}
     </delete>
 
 </mapper>

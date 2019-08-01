@@ -31,6 +31,7 @@ public class LessonController {
     private final SubjectService subjectService;
     private final PeriodService periodService;
     private final UserService userService;
+    private final ClassroomService classroomService;
 
     private final LessonService lessonService;
 
@@ -40,6 +41,8 @@ public class LessonController {
         List<Subject> subjects = subjectService.getAllSubjects();
         List<Period> periods = periodService.getAllPeriods();
         List<User> users = userService.getAllUsers();
+        List<Classroom> classrooms = classroomService.getAllClassrooms();
+
         if (CollectionUtils.isEmpty(campus)) {
             return ResultDto.error("请先设置校区信息，再进行排课！");
         }
@@ -52,20 +55,24 @@ public class LessonController {
         if (CollectionUtils.isEmpty(users)) {
             return ResultDto.error("请先增加教师，再进行排课！");
         }
+        if (CollectionUtils.isEmpty(classrooms)) {
+            return ResultDto.error("请先增加教室，再进行排课！");
+        }
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("campuses", campus);
         resultMap.put("subjects", subjects);
         resultMap.put("periods", periods);
         resultMap.put("users", users);
+        resultMap.put("classrooms", classrooms);
         return ResultDto.success().setObj(resultMap);
     }
 
     @PostMapping
-    public ResultDto addLesson(@RequestBody @Valid Lesson lesson, BindingResult result) {
+    public ResultDto addLesson(@RequestBody @Valid LessonVo lessonVo, BindingResult result) {
         if (result.hasErrors()) {
             return ResultDto.error("前端参数有误!");
         }
-        if (!lessonService.addLesson(lesson)) {
+        if (!lessonService.addLesson(lessonVo)) {
             return ResultDto.error("新增失败!");
         }
         return ResultDto.success("新增成功！");
@@ -75,8 +82,9 @@ public class LessonController {
     public ResultDto getLessons(@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd")Date startTime,
                                    @RequestParam(required = false) Long userId,
                                    @RequestParam(required = false) Long subjectId,
-                                   @RequestParam(required = false) Long campusId) {
-        return ResultDto.success().setObj(lessonService.getLessons(startTime, userId, subjectId, campusId));
+                                   @RequestParam(required = false) Long campusId,
+                                @RequestParam(required = false) Long classroomId) {
+        return ResultDto.success().setObj(lessonService.getLessons(startTime, userId, subjectId, campusId, classroomId));
     }
 
     @GetMapping("/users")
@@ -92,6 +100,11 @@ public class LessonController {
     @GetMapping("/campuses")
     public ResultDto getAllCampuses() {
         return ResultDto.success().setObj(campusService.getAllCampus());
+    }
+
+    @GetMapping("/classrooms")
+    public ResultDto getAllClassrooms() {
+        return ResultDto.success().setObj(classroomService.getAllClassrooms());
     }
 
     @PutMapping

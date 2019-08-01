@@ -20,6 +20,11 @@ public class Lesson {
     @NotNull
     private Long userId;
     private User user;
+
+    @NotNull
+    private Long classroomId;
+    private Classroom classroom;
+
     @NotNull
     private LocalDateTime startTime;
     @NotNull

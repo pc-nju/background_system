@@ -1,10 +1,7 @@
 package com.bms.service;
 
 import com.bms.dto.LessonDto;
-import com.bms.entity.Campus;
-import com.bms.entity.Lesson;
-import com.bms.entity.Subject;
-import com.bms.entity.User;
+import com.bms.entity.*;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -18,20 +15,21 @@ import java.util.List;
 public interface LessonService {
     /**
      * 新增{@link Lesson}
-     * @param lesson {@link Lesson}
+     * @param lessonVo {@link LessonVo}
      * @return {@code true}成功 {@code false}失败
      */
-    boolean addLesson(Lesson lesson);
+    boolean addLesson(LessonVo lessonVo);
 
     /**
      * 获取所有排课计划
      * @param startTime 开始时间
-     *@param userId {@link User}id
+     * @param userId {@link User}id
      * @param subjectId {@link Subject}id
      * @param campusId {@link Campus}id
+     * @param classroomId {@link Classroom}id
      * @return {@link LessonDto}集合
      */
-    List<LessonDto> getLessons(Date startTime, Long userId, Long subjectId, Long campusId);
+    List<LessonDto> getLessons(Date startTime, Long userId, Long subjectId, Long campusId, Long classroomId);
 
     /**
      * 更新{@link Lesson}

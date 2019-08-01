@@ -73,4 +73,7 @@ public final class CommonUtils {
     public static LocalTime parseTime(String timeStr) {
         return LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm"));
     }
+    public static LocalDateTime getLastTimeOfYear(int year) {
+        return parseDate(year + "-12-31 23:59");
+    }
 }

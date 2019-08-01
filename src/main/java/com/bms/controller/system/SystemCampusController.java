@@ -47,7 +47,6 @@ public class SystemCampusController {
     }
 
     @DeleteMapping("/{id}")
-
     public ResultDto removeCampus(@PathVariable Long id) {
         if (!campusService.removeCampus(id)) {
             return ResultDto.error("删除失败！");

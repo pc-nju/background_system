@@ -3,7 +3,7 @@ package com.bms.entity;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author 咸鱼
@@ -14,5 +14,5 @@ public class Period {
     private Long id;
     @NotBlank
     private String name;
-    private LocalDateTime createTime;
+    private Date createTime;
 }

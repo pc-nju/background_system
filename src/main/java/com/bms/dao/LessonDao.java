@@ -18,11 +18,11 @@ public interface LessonDao {
     List<Lesson> selectLessons(Lesson lesson);
 
     /**
-     * 新增课程
-     * @param lesson {@link Lesson}
+     * 批量新增课程
+     * @param lessons {@link Lesson}集合
      * @return 受影响的行数
      */
-    int insertLesson(Lesson lesson);
+    int insertLessons(@Param("lessons") List<Lesson> lessons);
 
     /**
      * 更新课程

@@ -4,6 +4,7 @@ import com.bms.dao.LessonDao;
 import com.bms.dto.LessonDto;
 import com.bms.dto.PlanDto;
 import com.bms.entity.Lesson;
+import com.bms.entity.LessonVo;
 import com.bms.entity.Period;
 import com.bms.exception.BaseException;
 import com.bms.service.LessonService;
@@ -42,16 +43,47 @@ public class LessonServiceImpl implements LessonService {
      * 业务逻辑：
      * 首先，查询当前科目，在当前时间段内，是否安排了其他老师来上
      * 其次，查询当前老师，在当前时间段内，是否安排了其他课程
+     * 最后，查询当前教室，在当前时间段内，是否安排了其他课程
      */
     @Override
-    public boolean addLesson(Lesson lesson) {
+    public boolean addLesson(LessonVo lessonVo) {
+        List<Lesson> lessons = new ArrayList<>();
+        Lesson lesson = new Lesson();
+        lessons.add(lesson);
+        lesson.setCampusId(lessonVo.getCampusId());
+        lesson.setSubjectId(lessonVo.getSubjectId());
+        lesson.setUserId(lessonVo.getUserId());
+        lesson.setClassroomId(lessonVo.getClassroomId());
+        lesson.setStartTime(lessonVo.getStartTime());
+        lesson.setEndTime(lessonVo.getEndTime());
         lesson.setWeek(getWeekOfYear(localDateTime2Date(lesson.getStartTime())));
-        detectConflicts(lesson);
-        return lessonDao.insertLesson(lesson) == 1;
+        // 若是循环排课，则将当年所有周该时间段排成该课程
+        if (lessonVo.getIsWeekCycle()) {
+            LocalDateTime lastTimeOfYear = getLastTimeOfYear(lesson.getEndTime().getYear());
+            // 加一周
+            LocalDateTime startTime = lesson.getStartTime().plusDays(FinalName.DAYS_OF_WEEK);
+            LocalDateTime endTime = lesson.getEndTime().plusDays(FinalName.DAYS_OF_WEEK);
+            while (!endTime.isAfter(lastTimeOfYear)){
+                Lesson tempLesson = new Lesson();
+                lessons.add(tempLesson);
+                tempLesson.setCampusId(lesson.getCampusId());
+                tempLesson.setSubjectId(lesson.getSubjectId());
+                tempLesson.setUserId(lesson.getUserId());
+                tempLesson.setClassroomId(lesson.getClassroomId());
+                tempLesson.setStartTime(startTime);
+                tempLesson.setEndTime(endTime);
+                tempLesson.setWeek(getWeekOfYear(localDateTime2Date(endTime)));
+                startTime = startTime.plusDays(FinalName.DAYS_OF_WEEK);
+                endTime = endTime.plusDays(FinalName.DAYS_OF_WEEK);
+            }
+        }
+        //检测冲突
+        lessons.forEach(this::detectConflicts);
+        return lessonDao.insertLessons(lessons) == lessons.size();
     }
 
     @Override
-    public List<LessonDto> getLessons(Date startTime, Long userId, Long subjectId, Long campusId) {
+    public List<LessonDto> getLessons(Date startTime, Long userId, Long subjectId, Long campusId, Long classroomId) {
         Lesson lesson = new Lesson();
         if (startTime != null) {
             lesson.setWeek(getWeekOfYear(startTime));
@@ -64,6 +96,9 @@ public class LessonServiceImpl implements LessonService {
         }
         if (campusId != null) {
             lesson.setCampusId(campusId);
+        }
+        if (classroomId != null) {
+            lesson.setClassroomId(classroomId);
         }
         List<Lesson> lessons = selectLessons(lesson);
         List<Period> periods = periodService.getAllPeriods();
@@ -197,6 +232,20 @@ public class LessonServiceImpl implements LessonService {
         if (!CollectionUtils.isEmpty(lessons2)) {
             throw new BaseException("老师【" + lessons2.get(0).getUser().getName() + "】在当前时间段内已给其安排了【"
                     + lessons2.get(0).getSubject().getName() + "】课程！");
+        }
+
+        //第三次查询：查询当前教室，在当前时间段内，是否已存在记录（PS：是否安排了其他课程）
+        Lesson tempLesson3 = new Lesson();
+        if (lesson.getId() != null) {
+            tempLesson3.setId(lesson.getId());
+        }
+        tempLesson3.setClassroomId(lesson.getClassroomId());
+        tempLesson3.setStartTime(lesson.getStartTime());
+        tempLesson3.setEndTime(lesson.getEndTime());
+        List<Lesson> lessons3 = selectLessons(tempLesson3);
+        if (!CollectionUtils.isEmpty(lessons3)) {
+            throw new BaseException("教室【" + lessons3.get(0).getClassroom().getName() + "】在当前时间段内已给其安排了【"
+                    + lessons3.get(0).getSubject().getName() + "】课程！");
         }
     }
 

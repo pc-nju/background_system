@@ -27,5 +27,5 @@ public interface FinalName {
 
     String DATE_FORMAT = "yyyy-m-d";
     int ARR_LENGTH = 2;
-    int ARR_CAPACITY = 7;
+    int DAYS_OF_WEEK = 7;
 }
