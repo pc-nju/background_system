@@ -4,6 +4,7 @@
     <resultMap id="SubjectMap" type="Subject">
         <id column="id" jdbcType="INTEGER" property="id" />
         <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="minutes" jdbcType="INTEGER" property="minutes" />
         <result column="create_time" jdbcType="DATE" property="createTime" />
     </resultMap>
     <insert id="insertSubject" parameterType="Subject">
@@ -15,18 +16,24 @@
             <if test="name != null and !&quot;&quot;.equals(name.trim())">
                 `name`,
             </if>
+            <if test="minutes != null">
+                `minutes`,
+            </if>
             create_time
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="name != null and !&quot;&quot;.equals(name.trim())">
                 #{name, jdbcType=VARCHAR},
             </if>
+            <if test="minutes != null">
+                #{minutes, jdbcType=INTEGER},
+            </if>
             NOW(),
         </trim>
     </insert>
 
     <select id="selectSubject" parameterType="Subject" resultMap="SubjectMap">
-        SELECT id,name FROM subject
+        SELECT id,name,minutes FROM subject
         <trim prefix="WHERE" suffixOverrides="AND">
             <if test="id != null">
                 id = #{id} AND
@@ -39,7 +46,16 @@
     </select>
 
     <update id="updateSubject" parameterType="Subject">
-        UPDATE subject SET name = #{name} WHERE id=#{id}
+        UPDATE subject
+        <set>
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                name = #{name},
+            </if>
+            <if test="minutes != null">
+                minutes = #{minutes},
+            </if>
+        </set>
+        WHERE id=#{id}
     </update>
 
     <delete id="deleteSubject" parameterType="Long">

@@ -1,12 +1,12 @@
 server:
-  port: 8080
+  port: 8082
 spring:
   application:
     name: bms
   datasource:
           name: test
           #待修改
-          url: jdbc:mysql://127.0.0.1:3306/tomcat
+          url: jdbc:mysql://127.0.0.1:3306/class?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
           username: root
           password: root
           driver-class-name: com.mysql.jdbc.Driver

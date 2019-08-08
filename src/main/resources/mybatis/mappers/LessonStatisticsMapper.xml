@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bms.dao.LessonStatisticsDao">
+    <resultMap id="LessonStatisticsMap" type="LessonStatistics">
+        <result column="user_id" jdbcType="INTEGER" property="userId" />
+        <result column="subject_name" jdbcType="VARCHAR" property="subjectName" />
+        <result column="lessonStatistics" jdbcType="VARCHAR" property="lessonStatistics" />
+    </resultMap>
+    <select id="selectLessonStatistics" resultMap="LessonStatisticsMap">
+        SELECT l.user_id,s.name subject_name,SUM(l.lesson_statistics) lessonStatistics
+        FROM lesson l,user u,subject s
+        WHERE l.user_id = u.id AND l.subject_id = s.id
+        <if test="year != null">
+            AND DATE_FORMAT(end_time, '%Y')=#{year}
+        </if>
+        <if test="month != null">
+            AND DATE_FORMAT(end_time, '%m')=#{month}
+        </if>
+        GROUP BY l.user_id,l.subject_id
+        ORDER BY l.user_id ASC
+    </select>
+</mapper>

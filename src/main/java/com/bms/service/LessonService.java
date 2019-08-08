@@ -3,8 +3,6 @@ package com.bms.service;
 import com.bms.dto.LessonDto;
 import com.bms.entity.*;
 
-import javax.validation.Valid;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -44,4 +42,12 @@ public interface LessonService {
      * @return {@code true}成功 {@code false}失败
      */
     boolean removeLesson(String ids);
+
+    /**
+     * 获取课时统计
+     * @param year 年份
+     * @param month 月份
+     * @return 统计数据
+     */
+    Object getLessonStatistics(Integer year, Integer month);
 }

@@ -29,6 +29,9 @@ public class Lesson {
     private LocalDateTime startTime;
     @NotNull
     private LocalDateTime endTime;
+
+    private Integer lessonStatistics;
+
     private String week;
     @NotNull
     private Long campusId;

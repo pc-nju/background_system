@@ -36,4 +36,11 @@ public interface SubjectService {
      * @return {@code true}成功 {@code false}失败
      */
     boolean removeSubject(Long id);
+
+    /**
+     * 根据id获取指定{@link Subject}
+     * @param id {@link Subject} id
+     * @return {@link Subject}
+     */
+    Subject getSubjectById(Long id);
 }

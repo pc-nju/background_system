@@ -8,6 +8,7 @@
         <result column="classroom_id" jdbcType="INTEGER" property="classroomId" />
         <result column="start_time" jdbcType="TIME" property="startTime" />
         <result column="end_time" jdbcType="TIME" property="endTime" />
+        <result column="lesson_statistics" jdbcType="INTEGER" property="lessonStatistics" />
         <result column="week" jdbcType="VARCHAR" property="week" />
         <result column="campus_id" jdbcType="INTEGER" property="campusId" />
         <result column="create_time" jdbcType="INTEGER" property="createTime" />
@@ -25,10 +26,11 @@
         </association>
     </resultMap>
     <insert id="insertLessons">
-        INSERT INTO `lesson`(`subject_id`,`user_id`,`classroom_id`,`start_time`,`end_time`,`week`,`campus_id`,`create_time`)
+        INSERT INTO `lesson`(`subject_id`,`user_id`,`classroom_id`,`start_time`,`end_time`,`lesson_statistics`,`week`,`campus_id`,`create_time`)
         VALUES
         <foreach collection="lessons" item="lesson" index="index" separator=",">
-            (#{lesson.subjectId},#{lesson.userId},#{lesson.classroomId},#{lesson.startTime},#{lesson.endTime},#{lesson.week},#{lesson.campusId},NOW())
+            (#{lesson.subjectId},#{lesson.userId},#{lesson.classroomId},#{lesson.startTime},#{lesson.endTime},
+            #{lesson.lessonStatistics},#{lesson.week},#{lesson.campusId},NOW())
         </foreach>
     </insert>
 
@@ -81,6 +83,9 @@
             </if>
             <if test="endTime != null">
                 end_time = #{endTime},
+            </if>
+            <if test="lessonStatistics != null">
+                lesson_statistics = #{lessonStatistics},
             </if>
             <if test="week != null">
                 week = #{week},

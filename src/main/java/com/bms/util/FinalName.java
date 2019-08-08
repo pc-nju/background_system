@@ -28,4 +28,6 @@ public interface FinalName {
     String DATE_FORMAT = "yyyy-m-d";
     int ARR_LENGTH = 2;
     int DAYS_OF_WEEK = 7;
+
+    int MINUTES_PER_LESSON = 90;
 }

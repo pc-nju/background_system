@@ -1,6 +1,7 @@
 package com.bms.dao;
 
 import com.bms.entity.Lesson;
+import com.bms.entity.LessonStatistics;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

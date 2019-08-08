@@ -1,14 +1,15 @@
 package com.bms.service.impl;
 
 import com.bms.dao.LessonDao;
+import com.bms.dao.LessonStatisticsDao;
 import com.bms.dto.LessonDto;
 import com.bms.dto.PlanDto;
-import com.bms.entity.Lesson;
-import com.bms.entity.LessonVo;
-import com.bms.entity.Period;
+import com.bms.entity.*;
 import com.bms.exception.BaseException;
 import com.bms.service.LessonService;
 import com.bms.service.PeriodService;
+import com.bms.service.SubjectService;
+import com.bms.service.UserService;
 import com.bms.util.FinalName;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +20,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.validation.constraints.NotNull;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static com.bms.util.CommonUtils.*;
@@ -38,6 +42,9 @@ import static com.bms.util.CommonUtils.*;
 public class LessonServiceImpl implements LessonService {
     private final LessonDao lessonDao;
     private final PeriodService periodService;
+    private final SubjectService subjectService;
+    private final UserService userService;
+    private final LessonStatisticsDao lessonStatisticsDao;
 
     /**
      * 业务逻辑：
@@ -47,6 +54,10 @@ public class LessonServiceImpl implements LessonService {
      */
     @Override
     public boolean addLesson(LessonVo lessonVo) {
+        Subject subject = subjectService.getSubjectById(lessonVo.getSubjectId());
+        if (subject == null) {
+            throw new BaseException("待修改课程科目不存在！");
+        }
         List<Lesson> lessons = new ArrayList<>();
         Lesson lesson = new Lesson();
         lessons.add(lesson);
@@ -56,6 +67,10 @@ public class LessonServiceImpl implements LessonService {
         lesson.setClassroomId(lessonVo.getClassroomId());
         lesson.setStartTime(lessonVo.getStartTime());
         lesson.setEndTime(lessonVo.getEndTime());
+
+        int lessonStatistics = getStatistics(lesson.getStartTime(), lesson.getEndTime(), subject.getMinutes());
+        lesson.setLessonStatistics(lessonStatistics);
+
         lesson.setWeek(getWeekOfYear(localDateTime2Date(lesson.getStartTime())));
         // 若是循环排课，则将当年所有周该时间段排成该课程
         if (lessonVo.getIsWeekCycle()) {
@@ -72,6 +87,7 @@ public class LessonServiceImpl implements LessonService {
                 tempLesson.setClassroomId(lesson.getClassroomId());
                 tempLesson.setStartTime(startTime);
                 tempLesson.setEndTime(endTime);
+                tempLesson.setLessonStatistics(lessonStatistics);
                 tempLesson.setWeek(getWeekOfYear(localDateTime2Date(endTime)));
                 startTime = startTime.plusDays(FinalName.DAYS_OF_WEEK);
                 endTime = endTime.plusDays(FinalName.DAYS_OF_WEEK);
@@ -80,6 +96,13 @@ public class LessonServiceImpl implements LessonService {
         //检测冲突
         lessons.forEach(this::detectConflicts);
         return lessonDao.insertLessons(lessons) == lessons.size();
+    }
+
+    /**
+     * 将上课时间转换成课时，1个半小时为1个课时
+     */
+    private int getStatistics(@NotNull LocalDateTime startTime, @NotNull LocalDateTime endTime, Integer minutesPerLesson) {
+        return (int) Math.round(Duration.between(startTime, endTime).get(ChronoUnit.SECONDS) / (minutesPerLesson * 60.0));
     }
 
     @Override
@@ -156,10 +179,13 @@ public class LessonServiceImpl implements LessonService {
         if (lessonDao.selectLessonById(lesson.getId()) == null) {
             throw new BaseException("该课程不存在！");
         }
-
+        Subject subject = subjectService.getSubjectById(lesson.getSubjectId());
+        if (subject == null) {
+            throw new BaseException("待修改课程科目不存在！");
+        }
         // 检测当前课程计划是否和数据库中的已有计划存在冲突
         detectConflicts(lesson);
-
+        lesson.setLessonStatistics(getStatistics(lesson.getStartTime(), lesson.getEndTime(), subject.getMinutes()));
         lesson.setWeek(getWeekOfYear(localDateTime2Date(lesson.getStartTime())));
         return lessonDao.updateLesson(lesson) == 1;
     }
@@ -175,6 +201,32 @@ public class LessonServiceImpl implements LessonService {
             throw new BaseException("删除失败！");
         }
         return true;
+    }
+
+    @Override
+    public Object getLessonStatistics(Integer year, Integer month) {
+        if (year == null) {
+            throw new BaseException("年份为空，无法获取统计数据！");
+        }
+        List<LessonStatistics> lessonStatisticsList = lessonStatisticsDao.selectLessonStatistics(year, month);
+        Map<Long, Map<String, Integer>> resultMap = new LinkedHashMap<>();
+
+        if (!CollectionUtils.isEmpty(lessonStatisticsList)) {
+            // 查询所有课程
+            List<Subject> subjects = subjectService.getAllSubjects();
+            List<User> users = userService.getAllUsers();
+            users.forEach(user -> {
+                Map<String, Integer> map = new LinkedHashMap<>();
+                subjects.forEach(subject -> map.putIfAbsent(subject.getName(), 0));
+                resultMap.putIfAbsent(user.getId(), map);
+            });
+            lessonStatisticsList.forEach(lessonStatistics -> {
+                Map<String, Integer> tempMap = resultMap.get(lessonStatistics.getUserId());
+                // 若不是90分钟一节课，则需要转换成相应的课时
+                tempMap.put(lessonStatistics.getSubjectName(), lessonStatistics.getLessonStatistics());
+            });
+        }
+        return resultMap;
     }
 
     private Map<String, Map<String, Map<Integer, List<Lesson>>>> list2Map(List<Lesson> lessons, List<Period> periods) {

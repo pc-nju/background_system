@@ -63,6 +63,17 @@ public class SubjectServiceImpl implements SubjectService {
         return subjectDao.deleteSubject(id) == 1;
     }
 
+    @Override
+    public Subject getSubjectById(Long id) {
+        Subject subject = new Subject();
+        subject.setId(id);
+        List<Subject> subjects = selectSubject(subject);
+        if (!CollectionUtils.isEmpty(subjects)) {
+            return subjects.get(0);
+        }
+        return null;
+    }
+
     private int insertSubject(Subject subject) {
         return subjectDao.insertSubject(subject);
     }
