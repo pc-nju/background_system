@@ -2,6 +2,9 @@ package com.bms.util;
 
 import org.springframework.util.AntPathMatcher;
 
+import java.text.DecimalFormat;
+import java.time.format.DateTimeFormatter;
+
 /**
  * @author 咸鱼
  * @date 2019-06-03 20:54
@@ -29,5 +32,11 @@ public interface FinalName {
     int ARR_LENGTH = 2;
     int DAYS_OF_WEEK = 7;
     String SEPARATOR = ",";
-    String DATE_TIME_FORMATTER = "";
+    DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    long YEAR_TO_MILLISECONDS = 31536000000L;
+    /**
+     * 没有，则补0
+     */
+    DecimalFormat DECIMAL_FORMAT = new DecimalFormat("##.00");
+    String SUBJECT_NAME_SEPARATOR = "/";
 }

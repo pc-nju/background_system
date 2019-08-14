@@ -98,16 +98,25 @@
     <select id="getUsersByKeyWords" parameterType="String" resultMap="lazyLoadRolesMap">
         SELECT id,name,userface,phone,telephone,address,enabled,username,remark
         FROM user
-        WHERE id NOT IN (
-        SELECT ur.user_id FROM user_role ur,role r
-        WHERE ur.role_id=r.id
-        AND r.name = '${@com.bms.util.FinalName@ROLE_ADMIN}'
-        )
         <if test="keyWords != 'all'">
             AND name LIKE concat('%',#{keyWords},'%')
         </if>
         ORDER BY id ASC
     </select>
+
+    <!--<select id="getUsersByKeyWords" parameterType="String" resultMap="lazyLoadRolesMap">-->
+        <!--SELECT id,name,userface,phone,telephone,address,enabled,username,remark-->
+        <!--FROM user-->
+        <!--WHERE id NOT IN (-->
+        <!--SELECT ur.user_id FROM user_role ur,role r-->
+        <!--WHERE ur.role_id=r.id-->
+        <!--AND r.name = '${@com.bms.util.FinalName@ROLE_ADMIN}'-->
+        <!--)-->
+        <!--<if test="keyWords != 'all'">-->
+            <!--AND name LIKE concat('%',#{keyWords},'%')-->
+        <!--</if>-->
+        <!--ORDER BY id ASC-->
+    <!--</select>-->
 
     <select id="getUserById" parameterType="Long" resultMap="eagerLoadRolesMap">
         SELECT u.id,u.name,u.userface,u.phone,u.telephone,u.address,u.enabled,u.remark,

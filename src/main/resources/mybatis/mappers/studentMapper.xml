@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bms.dao.StudentDao">
+    <resultMap id="StudentMap" type="Student">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="age" jdbcType="INTEGER" property="age" />
+        <result column="gender" jdbcType="VARCHAR" property="gender" />
+        <result column="parent_name" jdbcType="VARCHAR" property="parentName" />
+        <result column="parent_phone" jdbcType="VARCHAR" property="parentPhone" />
+        <result column="idCard" jdbcType="VARCHAR" property="idCard" />
+        <result column="register_price" jdbcType="INTEGER" property="registerPrice" />
+        <result column="register_date" jdbcType="DATE" property="registerDate" />
+        <result column="begin_date" jdbcType="DATE" property="beginDate" />
+        <result column="end_date" jdbcType="DATE" property="endDate" />
+        <result column="study_state" jdbcType="BOOLEAN" property="studyState" />
+        <result column="pause_date" jdbcType="DATE" property="pauseDate" />
+        <result column="create_date" jdbcType="DATE" property="createDate" />
+    </resultMap>
+
+    <insert id="insertStudents" parameterType="List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO student (`name`,age,gender,parent_name,parent_phone,idCard,register_price,register_date,begin_date,
+        end_date,study_state,pause_date,create_date)
+        VALUES
+        <foreach collection="list" item="student" separator=",">
+            (#{student.name}, #{student.age}, #{student.gender}, #{student.parentName}, #{student.parentPhone},
+            #{student.idCard}, #{student.registerPrice}, #{student.registerDate}, #{student.beginDate},
+            #{student.endDate}, #{student.studyState}, #{student.pauseDate}, NOW())
+        </foreach>
+    </insert>
+
+    <insert id="insertStudent" parameterType="Student">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO student (`name`,age,gender,parent_name,parent_phone,idCard,register_price,register_date,begin_date,
+        end_date,study_state,pause_date,create_date)
+        VALUES
+        (#{name}, #{age}, #{gender}, #{parentName}, #{parentPhone}, #{idCard}, #{registerPrice}, #{registerDate},
+        #{beginDate}, #{endDate}, #{studyState}, #{pauseDate}, NOW())
+    </insert>
+
+    <select id="selectAllStudents" resultMap="StudentMap">
+        SELECT id,name,age,gender,parent_name,parent_phone,idCard,register_price,register_date,begin_date,end_date,study_state,
+        pause_date FROM student
+    </select>
+
+    <select id="getStudents" parameterType="com.bms.dto.StudentDto" resultMap="StudentMap">
+        SELECT DISTINCT s.id,s.name,s.age,s.gender,s.parent_name,s.parent_phone,s.idCard,s.register_price,s.register_date,s.begin_date,
+        s.end_date,s.study_state,s.pause_date
+        FROM student s
+        LEFT JOIN student_subject ss ON s.id = ss.student_id
+        <trim prefix="WHERE" suffixOverrides="AND">
+            <if test="searchWords != null and !&quot;&quot;.equals(searchWords.trim())">
+                s.name LIKE concat('%', #{searchWords}, '%') AND
+            </if>
+            <if test="ids != null">
+                ss.subject_id IN
+                <foreach collection="ids" item="subjectId" open="(" close=")" separator=",">
+                    #{subjectId}
+                </foreach>
+                AND
+            </if>
+            <if test="startBeginDate != null and endBeginDate != null">
+                s.begin_date BETWEEN #{startBeginDate} AND #{endBeginDate} AND
+            </if>
+        </trim>
+        ORDER BY s.id ASC
+    </select>
+
+    <delete id="deleteStudents">
+        DELETE FROM student WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectStudent" resultMap="StudentMap">
+        SELECT id, study_state, begin_date, end_date, pause_date FROM student
+        <trim prefix="WHERE" suffixOverrides="AND">
+            <if test="id != null">
+                id = #{id} AND
+            </if>
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                name = #{name,jdbcType=CHAR} AND
+            </if>
+            <if test="parentName != null and !&quot;&quot;.equals(parentName.trim())">
+                parent_name = #{parentName,jdbcType=CHAR} AND
+            </if>
+        </trim>
+    </select>
+
+    <update id="updateStudent" parameterType="Student">
+        UPDATE student
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and !&quot;&quot;.equals(name.trim())">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="age != null">
+                name = #{age},
+            </if>
+            <if test="gender != null and !&quot;&quot;.equals(gender.trim())">
+                gender = #{gender,jdbcType=CHAR},
+            </if>
+            <if test="parentName != null and !&quot;&quot;.equals(parentName.trim())">
+                parent_name = #{parentName,jdbcType=VARCHAR},
+            </if>
+            <if test="parentPhone != null and !&quot;&quot;.equals(parentPhone.trim())">
+                parent_phone = #{parentPhone,jdbcType=VARCHAR},
+            </if>
+            <if test="registerPrice != null">
+                register_price = #{registerPrice},
+            </if>
+            <if test="registerDate != null">
+                register_date = #{registerDate,jdbcType=DATE},
+            </if>
+            <if test="beginDate != null">
+                begin_date = #{beginDate,jdbcType=DATE},
+            </if>
+            <if test="endDate != null">
+                end_date = #{endDate,jdbcType=DATE},
+            </if>
+            <if test="studyState != null">
+                study_state = #{studyState, jdbcType=BOOLEAN},
+            </if>
+            pause_date = #{pauseDate,jdbcType=DATE},
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectMaxId" resultType="String">
+        SELECT idCard FROM student WHERE id = (SELECT max(id) FROM student)
+    </select>
+
+</mapper>

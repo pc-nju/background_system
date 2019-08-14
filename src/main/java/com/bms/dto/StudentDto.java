@@ -1,7 +1,5 @@
 package com.bms.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -11,15 +9,14 @@ import java.time.LocalDate;
  * @date 2019-06-23 21:46
  */
 @Data
-public class EmployeeDto {
+public class StudentDto {
     private Integer pageNum;
     private Integer pageSize;
     private String searchWords;
-    private Long nationId;
-    private Long politicId;
-    private String engageForm;
+    private String subjectIds;
     private String beginDateScope;
 
+    private String[] ids;
     private LocalDate startBeginDate;
     private LocalDate endBeginDate;
 }

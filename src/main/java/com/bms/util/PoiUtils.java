@@ -1,10 +1,9 @@
 package com.bms.util;
 
-import com.bms.entity.Employee;
-import com.bms.entity.Nation;
-import com.bms.entity.PoliticsStatus;
-import com.bms.exception.BaseException;
+import com.bms.entity.Student;
+import com.bms.entity.Subject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hpsf.DocumentSummaryInformation;
 import org.apache.poi.hpsf.SummaryInformation;
 import org.apache.poi.hssf.usermodel.*;
@@ -29,32 +28,35 @@ import java.util.*;
 @Slf4j
 public final class PoiUtils {
     private static final short DATE_FORMAT = HSSFDataFormat.getBuiltinFormat("m/d/yy");
-    private static final int[] COLUMN_WIDTH = {5, 12, 10, 5, 12, 20, 5, 10, 16, 12, 20, 15, 20, 10, 10,
-            20, 20, 12, 12, 12, 12, 12, 12, 12, 5};
-    private static final String[] COLUMN_NAMES = {"编号", "姓名", "工号", "性别", "出生日期",
-            "身份证号", "婚姻状况", "民族", "籍贯", "政治面貌",
-            "邮箱", "电话号码", "联系地址", "聘用形式", "最高学历",
-            "专业", "毕业院校", "入职日期", "在职状态",  "合同期限(年)",
-            "转正日期", "离职日期", "合同起始日期", "合同终止日期", "工龄"};
-    private static final String SHEET_NAME = "员工表.xls";
+    private static final int[] COLUMN_WIDTH = {12, 10, 5, 5, 12, 15, 25, 10, 12, 15, 15, 10, 15};
+    private static final String[] COLUMN_NAMES = {"姓名", "学号", "年龄", "性别", "家长姓名",
+            "家长电话", "报名科目", "报名价格", "报名日期", "开始上课日期",
+            "结束上课日期", "学习状态", "暂停上课日期"};
+    private static Map<String, Boolean> STUDY_STATE_MAP = new HashMap<>();
+    private static final String SHEET_NAME = "学生信息表.xls";
+    private static Map<Long, String> subjectIdMap;
+    private static Map<String, Long> subjectNameMap;
+
+    static {
+        STUDY_STATE_MAP.put("正在学习", Boolean.TRUE);
+        STUDY_STATE_MAP.put("暂停学习", Boolean.FALSE);
+    }
     /**
-     * 将上传的excel中的数据转换成{@link Employee}集合
+     * 将上传的excel中的数据转换成{@link Student}集合
      * @param file 上传的文件对象
-     * @param allNations 民族集合
-     * @param allPolitics 政治面貌集合
-     * @return {@link Employee}集合
+     * @param subjects 科目集合
+     * @return {@link Student}集合
      */
-    public static List<Employee> importEmp2List(MultipartFile file, List<Nation> allNations, List<PoliticsStatus> allPolitics) {
-        Map<String, Integer> nationsMap = translateNations2Map(allNations);
-        Map<String, Integer> politicsMap = translatePolitics2Map(allPolitics);
-        List<Employee> employees = new ArrayList<>();
+    public static List<Student> importEmp2List(MultipartFile file, List<Subject> subjects) {
+        translateSubjects2Map(subjects);
+        List<Student> students = new ArrayList<>();
         try {
             HSSFWorkbook workbook = new HSSFWorkbook(new POIFSFileSystem(file.getInputStream()));
             int numberOfSheets = workbook.getNumberOfSheets();
             for (int i = 0; i < numberOfSheets; i++) {
                 HSSFSheet sheet = workbook.getSheetAt(i);
                 int physicalNumberOfRows = sheet.getPhysicalNumberOfRows();
-                Employee employee;
+                Student student;
                 for (int j = 0; j < physicalNumberOfRows; j++) {
                     if (j == 0) {
                         // 标题行
@@ -66,7 +68,7 @@ public final class PoiUtils {
                         continue;
                     }
                     int physicalNumberOfCells = row.getPhysicalNumberOfCells();
-                    employee = new Employee();
+                    student = new Student();
                     for (int k = 0; k < physicalNumberOfCells; k++) {
                         HSSFCell cell = row.getCell(k);
                         switch (cell.getCellTypeEnum()) {
@@ -76,53 +78,33 @@ public final class PoiUtils {
                                     cellValue = "";
                                 }
                                 switch (k) {
+                                    case 0:
+                                        student.setName(cellValue);
+                                        break;
                                     case 1:
-                                        employee.setName(cellValue);
+                                        student.setIdCard(cellValue);
                                         break;
                                     case 2:
-                                        employee.setWorkId(cellValue);
+                                        student.setAge(Integer.valueOf(cellValue));
                                         break;
                                     case 3:
-                                        employee.setGender(cellValue);
+                                        student.setGender(cellValue);
+                                        break;
+                                    case 4:
+                                        student.setParentName(cellValue);
                                         break;
                                     case 5:
-                                        employee.setIdCard(cellValue);
+                                        student.setParentPhone(cellValue);
                                         break;
                                     case 6:
-                                        employee.setWedlock(cellValue);
+                                        List<Long> subjectIds = translateSubjectNames2Id(cellValue);
+                                        student.setSubjectIds(subjectIds == null ? null : subjectIds.toArray(new Long[subjectIds.size()]));
                                         break;
                                     case 7:
-                                        employee.setNationId(nationsMap.get(cellValue));
-                                        break;
-                                    case 8:
-                                        employee.setNativePlace(cellValue);
-                                        break;
-                                    case 9:
-                                        employee.setPoliticId(politicsMap.get(cellValue));
-                                        break;
-                                    case 10:
-                                        employee.setEmail(cellValue);
+                                        student.setRegisterPrice(Integer.valueOf(cellValue));
                                         break;
                                     case 11:
-                                        employee.setPhone(cellValue);
-                                        break;
-                                    case 12:
-                                        employee.setAddress(cellValue);
-                                        break;
-                                    case 13:
-                                        employee.setEngageForm(cellValue);
-                                        break;
-                                    case 14:
-                                        employee.setTipTopDegree(cellValue);
-                                        break;
-                                    case 15:
-                                        employee.setSpecialty(cellValue);
-                                        break;
-                                    case 16:
-                                        employee.setSchool(cellValue);
-                                        break;
-                                    case 18:
-                                        employee.setWorkState(cellValue);
+                                        student.setStudyState(STUDY_STATE_MAP.get(cellValue));
                                         break;
                                     default:
                                         break;
@@ -132,29 +114,17 @@ public final class PoiUtils {
                             default:
                             {
                                 switch (k) {
-                                    case 4:
-                                        employee.setBirthday(cell.getDateCellValue());
+                                    case 8:
+                                        student.setRegisterDate(CommonUtils.date2LocalDate(cell.getDateCellValue()));
                                         break;
-                                    case 17:
-                                        employee.setBeginDate(cell.getDateCellValue());
+                                    case 9:
+                                        student.setBeginDate(CommonUtils.date2LocalDate(cell.getDateCellValue()));
                                         break;
-                                    case 19:
-                                        employee.setContractTerm(cell.getNumericCellValue());
+                                    case 10:
+                                        student.setEndDate(CommonUtils.date2LocalDate(cell.getDateCellValue()));
                                         break;
-                                    case 20:
-                                        employee.setConversionTime(cell.getDateCellValue());
-                                        break;
-                                    case 21:
-                                        employee.setNotWorkDate(cell.getDateCellValue());
-                                        break;
-                                    case 22:
-                                        employee.setBeginContract(cell.getDateCellValue());
-                                        break;
-                                    case 23:
-                                        employee.setEndContract(cell.getDateCellValue());
-                                        break;
-                                    case 24:
-                                        employee.setWorkAge((int) cell.getNumericCellValue());
+                                    case 12:
+                                        student.setPauseDate(CommonUtils.date2LocalDate(cell.getDateCellValue()));
                                         break;
                                     default:
                                         break;
@@ -163,37 +133,49 @@ public final class PoiUtils {
                                 break;
                         }
                     }
-                    employees.add(employee);
+                    students.add(student);
                 }
             }
         } catch (IOException e) {
             log.error("读取文件报错：", e);
         }
-        return employees;
+        return students;
     }
-    private static Map<String, Integer> translateNations2Map(List<Nation> nations) {
-        if (CollectionUtils.isEmpty(nations)) {
-            throw new BaseException("未查询到任何民族数据！");
+
+    private static List<Long> translateSubjectNames2Id(String cellValue) {
+        List<Long> subjectIds = null;
+        if (StringUtils.isNoneBlank(cellValue)) {
+            subjectIds = new ArrayList<>();
+            if (cellValue.contains(FinalName.SUBJECT_NAME_SEPARATOR)) {
+                String[] nameArray = cellValue.split(FinalName.SUBJECT_NAME_SEPARATOR);
+                for (String subjectName : nameArray) {
+                    subjectIds.add(subjectNameMap.get(subjectName));
+                }
+            } else {
+                subjectIds.add(subjectNameMap.get(cellValue));
+            }
         }
-        Map<String, Integer> map = new HashMap<>(nations.size());
-        nations.forEach(nation -> map.put(nation.getName(), nation.getId()));
-        return map;
+        return subjectIds;
     }
-    private static Map<String, Integer> translatePolitics2Map(List<PoliticsStatus> politics) {
-        if (CollectionUtils.isEmpty(politics)) {
-            throw new BaseException("未查询到任何政治面貌数据！");
+
+    private static void translateSubjects2Map(List<Subject> subjects) {
+        if (subjectNameMap == null) {
+            synchronized (PoiUtils.class) {
+                if (subjectNameMap == null) {
+                    subjectNameMap = new HashMap<>(subjects.size());
+                    subjects.forEach(subject -> subjectNameMap.put(subject.getName(), subject.getId()));
+                }
+            }
         }
-        Map<String, Integer> map = new HashMap<>(politics.size());
-        politics.forEach(politicsStatus -> map.put(politicsStatus.getName(), politicsStatus.getId()));
-        return map;
     }
 
     /**
-     * 将所有{@link Employee}导入excel
-     * @param employees 所有{@link Employee}
+     * 将所有{@link Student}导入excel
+     * @param students 所有{@link Student}
+     * @param subjects 所有{@link Subject}
      * @return 字节数组对象
      */
-    public static ResponseEntity<byte[]> exportEmp2Excel(List<Employee> employees) {
+    public static ResponseEntity<byte[]> exportEmp2Excel(List<Student> students, List<Subject> subjects) {
         HttpHeaders headers;
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             // 1.创建Excel文档
@@ -203,23 +185,23 @@ public final class PoiUtils {
             // 3.获取文档信息，并配置
             DocumentSummaryInformation dsi = workbook.getDocumentSummaryInformation();
             // 3.1文档类别
-            dsi.setCategory("员工信息");
+            dsi.setCategory("学生信息");
             // 3.2设置文档管理员
-            dsi.setManager("咸鱼");
+            dsi.setManager("TM");
             // 3.3设置组织机构
             dsi.setCompany("吹牛逼集团");
             // 4.获取摘要信息并配置
             SummaryInformation si = workbook.getSummaryInformation();
             // 4.1设置文档主题
-            si.setSubject("员工信息表");
+            si.setSubject("学生信息表");
             // 4.2设置文档标题
-            si.setTitle("员工信息");
+            si.setTitle("学生信息");
             // 4.3设置文档作者
-            si.setAuthor("咸鱼");
+            si.setAuthor("TM");
             // 4.4设置文档备注
             si.setComments("备注信息暂无");
             // 5.创建Excel表单
-            HSSFSheet sheet = workbook.createSheet("员工信息表");
+            HSSFSheet sheet = workbook.createSheet("学生信息表");
             // 6.全局设置
             // 6.1设置日期显示格式
             HSSFCellStyle dateCellStyle = workbook.createCellStyle();
@@ -234,7 +216,7 @@ public final class PoiUtils {
             createHeaderRow(sheet, COLUMN_NAMES, headerStyle);
 
             // 9.装载数据
-            loadData(sheet, employees, dateCellStyle);
+            loadData(sheet, students, subjects, dateCellStyle);
 
             // 10.返回
             headers = new HttpHeaders();
@@ -279,53 +261,55 @@ public final class PoiUtils {
     /**
      * 装载数据
      * @param sheet excel表单
-     * @param employees {@link Employee}
+     * @param students {@link Student}
      * @param dateCellStyle 表格样式
      */
-    private static void loadData(HSSFSheet sheet, List<Employee> employees, HSSFCellStyle dateCellStyle) {
-        if (!CollectionUtils.isEmpty(employees)) {
-            for (int i = 0; i < employees.size(); i++) {
+    private static void loadData(HSSFSheet sheet, List<Student> students, List<Subject> subjects, HSSFCellStyle dateCellStyle) {
+        if (!CollectionUtils.isEmpty(students)) {
+            for (int i = 0; i < students.size(); i++) {
                 HSSFRow row = sheet.createRow(i + 1);
-                Employee employee = employees.get(i);
-                row.createCell(0).setCellValue(employee.getId());
-                row.createCell(1).setCellValue(employee.getName() == null ? "" : employee.getName());
-                row.createCell(2).setCellValue(employee.getWorkId() == null ? "" : employee.getWorkId());
-                row.createCell(3).setCellValue(employee.getGender() == null ? "" : employee.getGender());
+                Student student = students.get(i);
+                row.createCell(0).setCellValue(student.getName() == null ? "" : student.getName());
+                row.createCell(1).setCellValue(student.getIdCard() == null ? "" : student.getIdCard());
+                row.createCell(2).setCellValue(student.getAge() == null ? "" : String.valueOf(student.getAge()));
+                row.createCell(3).setCellValue(student.getGender() == null ? "" : student.getGender());
+                row.createCell(4).setCellValue(student.getParentName() == null ? "" : student.getParentName());
+                row.createCell(5).setCellValue(student.getParentPhone() == null ? "" : student.getParentPhone());
+                row.createCell(6).setCellValue(student.getSubjectIds() == null ? "" : getSubjectNames(student.getSubjectIds(), subjects));
+                row.createCell(7).setCellValue(student.getRegisterPrice() == null ? "" : String.valueOf(student.getRegisterPrice()));
 
-                HSSFCell birthdayCell = row.createCell(4);
-                setDateFormatData(birthdayCell, employee.getBirthday() , dateCellStyle);
+                HSSFCell registerDateCell = row.createCell(8);
+                setDateFormatData(registerDateCell, CommonUtils.localDate2Date(student.getRegisterDate()) , dateCellStyle);
 
-                row.createCell(5).setCellValue(employee.getIdCard() == null ? "" : employee.getIdCard());
-                row.createCell(6).setCellValue(employee.getWedlock() == null ? "" : employee.getWedlock());
-                row.createCell(7).setCellValue(employee.getNation().getName() == null ? "" : employee.getNation().getName());
-                row.createCell(8).setCellValue(employee.getNativePlace() == null ? "" : employee.getNativePlace());
-                row.createCell(9).setCellValue(employee.getPoliticsStatus().getName() == null ? "" : employee.getPoliticsStatus().getName());
-                row.createCell(10).setCellValue(employee.getEmail() == null ? "" : employee.getEmail());
-                row.createCell(11).setCellValue(employee.getPhone() == null ? "" : employee.getPhone());
-                row.createCell(12).setCellValue(employee.getAddress() == null ? "" : employee.getAddress());
-                row.createCell(13).setCellValue(employee.getEngageForm() == null ? "" : employee.getEngageForm());
-                row.createCell(14).setCellValue(employee.getTipTopDegree() == null ? "" : employee.getTipTopDegree());
-                row.createCell(15).setCellValue(employee.getSpecialty() == null ? "" : employee.getSpecialty());
-                row.createCell(16).setCellValue(employee.getSchool() == null ? "" : employee.getSchool());
 
-                HSSFCell beginDateCell = row.createCell(17);
-                setDateFormatData(beginDateCell, employee.getBeginDate(), dateCellStyle);
+                HSSFCell beginDateCell = row.createCell(9);
+                setDateFormatData(beginDateCell, CommonUtils.localDate2Date(student.getBeginDate()), dateCellStyle);
 
-                row.createCell(18).setCellValue(employee.getWorkState() == null ? "" : employee.getWorkState());
-                row.createCell(19).setCellValue(employee.getContractTerm() == null ? -1 : employee.getContractTerm());
+                HSSFCell endDateCell = row.createCell(10);
+                setDateFormatData(endDateCell, CommonUtils.localDate2Date(student.getEndDate()), dateCellStyle);
 
-                HSSFCell conversionTimeCell = row.createCell(20);
-                setDateFormatData(conversionTimeCell, employee.getConversionTime(), dateCellStyle);
-                HSSFCell notWorkDateCell = row.createCell(21);
-                setDateFormatData(notWorkDateCell, employee.getNotWorkDate(), dateCellStyle);
-                HSSFCell beginContractCell = row.createCell(22);
-                setDateFormatData(beginContractCell, employee.getBeginContract(), dateCellStyle);
-                HSSFCell endContractCell = row.createCell(23);
-                setDateFormatData(endContractCell, employee.getEndContract(), dateCellStyle);
+                row.createCell(11).setCellValue(student.getStudyState() == null ? "" : student.getStudyState() ? "正在学习" : "暂停学习");
 
-                row.createCell(24).setCellValue(employee.getWorkAge() == null ? -1 : employee.getWorkAge());
+                HSSFCell pauseDateCell = row.createCell(12);
+                setDateFormatData(pauseDateCell, CommonUtils.localDate2Date(student.getPauseDate()), dateCellStyle);
             }
         }
+    }
+
+    private static String getSubjectNames(Long[] subjectIds, List<Subject> subjects) {
+        if (subjectIdMap == null) {
+            synchronized (PoiUtils.class) {
+                if (subjectIdMap == null) {
+                    subjectIdMap = new HashMap<>(subjects.size());
+                    subjects.forEach(subject -> subjectIdMap.put(subject.getId(), subject.getName()));
+                }
+            }
+        }
+        StringBuilder result = new StringBuilder();
+        for (Long subjectId : subjectIds) {
+            result.append(subjectIdMap.get(subjectId)).append("/");
+        }
+        return result.substring(0, result.length() - 1);
     }
 
     /**

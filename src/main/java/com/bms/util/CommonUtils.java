@@ -64,8 +64,18 @@ public final class CommonUtils {
     public static LocalDateTime date2LocalDateTime(Date date) {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
+    public static LocalDate date2LocalDate(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
     public static Date localDateTime2Date(LocalDateTime localDateTime) {
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+    public static Date localDate2Date(LocalDate localDate) {
+        Date date = null;
+        if (localDate != null) {
+            date = Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+        }
+        return date;
     }
     public static LocalDateTime parseDate(String dateStr) {
         return LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
