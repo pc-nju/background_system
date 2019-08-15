@@ -36,8 +36,13 @@ public class SubjectServiceImpl implements SubjectService {
     }
 
     @Override
+    public List<Subject> getSubjectsClassification() {
+        return subjectDao.selectSubjectsClassification();
+    }
+
+    @Override
     public List<Subject> getAllSubjects() {
-        return selectSubject(new Subject());
+        return subjectDao.selectAllSubjects();
     }
 
     @Override
@@ -72,6 +77,11 @@ public class SubjectServiceImpl implements SubjectService {
             return subjects.get(0);
         }
         return null;
+    }
+
+    @Override
+    public List<Subject> getSubjectsWithParentId(Long parentId) {
+        return subjectDao.selectSubjectsWithParentId(parentId);
     }
 
     private int insertSubject(Subject subject) {

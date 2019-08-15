@@ -18,6 +18,11 @@ public interface SubjectService {
     boolean addSubject(Subject subject);
 
     /**
+     * 获取所有科目分类
+     * @return {@link Subject}集合
+     */
+    List<Subject> getSubjectsClassification();
+    /**
      * 获取所有{@link Subject}
      * @return {@link Subject}集合
      */
@@ -43,4 +48,11 @@ public interface SubjectService {
      * @return {@link Subject}
      */
     Subject getSubjectById(Long id);
+
+    /**
+     * 根据科目分类id获取该分类下的所有{@link Subject}
+     * @param parentId 分类id
+     * @return {@link Subject}集合
+     */
+    List<Subject> getSubjectsWithParentId(Long parentId);
 }

@@ -5,6 +5,7 @@
         <id column="id" jdbcType="INTEGER" property="id" />
         <result column="name" jdbcType="VARCHAR" property="name" />
         <result column="minutes" jdbcType="INTEGER" property="minutes" />
+        <result column="parent_id" jdbcType="INTEGER" property="parentId" />
         <result column="create_time" jdbcType="DATE" property="createTime" />
     </resultMap>
     <insert id="insertSubject" parameterType="Subject">
@@ -16,6 +17,9 @@
             <if test="name != null and !&quot;&quot;.equals(name.trim())">
                 `name`,
             </if>
+            <if test="parentId != null">
+                `parent_id`,
+            </if>
             <if test="minutes != null">
                 `minutes`,
             </if>
@@ -25,12 +29,23 @@
             <if test="name != null and !&quot;&quot;.equals(name.trim())">
                 #{name, jdbcType=VARCHAR},
             </if>
+            <if test="parentId != null">
+                #{parentId},
+            </if>
             <if test="minutes != null">
                 #{minutes, jdbcType=INTEGER},
             </if>
             NOW(),
         </trim>
     </insert>
+
+    <select id="selectSubjectsClassification" resultMap="SubjectMap">
+        SELECT id,name FROM subject WHERE `parent_id` IS NULL
+    </select>
+    <select id="selectSubjectsWithParentId" parameterType="Long" resultMap="SubjectMap">
+        SELECT id,name,minutes FROM subject WHERE `parent_id` = #{parentId}
+    </select>
+
 
     <select id="selectSubject" parameterType="Subject" resultMap="SubjectMap">
         SELECT id,name,minutes FROM subject
@@ -42,6 +57,10 @@
                 name = #{name} AND
             </if>
         </trim>
+    </select>
+    <select id="selectAllSubjects" parameterType="Subject" resultMap="SubjectMap">
+        SELECT id,name,minutes FROM subject
+        WHERE `parent_id` IS NOT NULL
         ORDER BY id ASC
     </select>
 
@@ -50,6 +69,9 @@
         <set>
             <if test="name != null and !&quot;&quot;.equals(name.trim())">
                 name = #{name},
+            </if>
+            <if test="parentId != null">
+                `parent_id` = #{parentId},
             </if>
             <if test="minutes != null">
                 minutes = #{minutes},

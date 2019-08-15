@@ -1,10 +1,10 @@
 package com.bms.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -12,6 +12,7 @@ import java.util.Date;
  * @date 2019-07-10 19:25
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Subject {
     private Long id;
     @NotBlank
@@ -19,7 +20,7 @@ public class Subject {
     /**
      * 1课时对应多少时间
      */
-    @NotNull
     private Integer minutes;
+    private Long parentId;
     private Date createTime;
 }

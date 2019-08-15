@@ -18,6 +18,12 @@ public interface SubjectDao {
     int insertSubject(Subject subject);
 
     /**
+     * 获取所有科目分类
+     * @return {@link Subject}集合
+     */
+    List<Subject> selectSubjectsClassification();
+
+    /**
      * 查询{@link Subject}
      * @param subject 待查询{@link Subject}
      * @return {@link Subject}
@@ -37,4 +43,17 @@ public interface SubjectDao {
      * @return 受影响的行数
      */
     int deleteSubject(@Param("id") Long id);
+
+    /**
+     * 根据科目分类id获取该分类下的所有{@link Subject}
+     * @param parentId 分类id
+     * @return {@link Subject}集合
+     */
+    List<Subject> selectSubjectsWithParentId(@Param("parentId") Long parentId);
+
+    /**
+     * 查询除科目分类以外的所有{@link Subject}
+     * @return {@link Subject}集合
+     */
+    List<Subject> selectAllSubjects();
 }

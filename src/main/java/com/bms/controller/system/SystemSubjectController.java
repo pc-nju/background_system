@@ -32,6 +32,14 @@ public class SystemSubjectController {
         }
         return ResultDto.success("新增成功！");
     }
+    @GetMapping("/classification")
+    public ResultDto getSubjectsClassification() {
+        return ResultDto.success().setObj(subjectService.getSubjectsClassification());
+    }
+    @GetMapping("/{parentId}")
+    public ResultDto getSubjectsWithParentId(@PathVariable Long parentId) {
+        return ResultDto.success().setObj(subjectService.getSubjectsWithParentId(parentId));
+    }
 
     @GetMapping
     public ResultDto getAllSubjects() {
@@ -45,9 +53,15 @@ public class SystemSubjectController {
         }
         return ResultDto.success("更新成功！");
     }
+    @DeleteMapping("/classification/{id}")
+    public ResultDto removeSubjectClassification(@PathVariable Long id) {
+        if (!subjectService.removeSubject(id)) {
+            return ResultDto.error("删除失败！");
+        }
+        return ResultDto.success("删除成功！");
+    }
 
     @DeleteMapping("/{id}")
-
     public ResultDto removeSubject(@PathVariable Long id) {
         if (!subjectService.removeSubject(id)) {
             return ResultDto.error("删除失败！");
