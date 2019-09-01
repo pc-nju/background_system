@@ -39,4 +39,8 @@ public interface FinalName {
      */
     DecimalFormat DECIMAL_FORMAT = new DecimalFormat("##.00");
     String SUBJECT_NAME_SEPARATOR = "/";
+    String PERIOD_SEPARATOR = "-";
+    String SEPARATOR_EN = ":";
+    String SEPARATOR_CH = "：";
+    int TIME_FORMAT_LENGTH = 2;
 }
