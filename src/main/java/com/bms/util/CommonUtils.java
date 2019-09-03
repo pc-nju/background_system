@@ -61,6 +61,9 @@ public final class CommonUtils {
         LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         return localDate.format(DateTimeFormatter.ofPattern(FinalName.DATE_FORMAT));
     }
+    public static String formatDateTime(LocalDateTime localDateTime) {
+        return localDateTime.format(DateTimeFormatter.ofPattern(FinalName.DATE_TIME_FORMAT));
+    }
     public static LocalDateTime date2LocalDateTime(Date date) {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }

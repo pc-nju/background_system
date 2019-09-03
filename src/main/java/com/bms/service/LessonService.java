@@ -30,6 +30,17 @@ public interface LessonService {
     List<LessonDto> getLessons(Date startTime, Long userId, Long subjectId, Long campusId, Long classroomId);
 
     /**
+     * 下载课表
+     * @param startTime 开始时间
+     * @param userId {@link User}id
+     * @param subjectId {@link Subject}id
+     * @param campusId {@link Campus}id
+     * @return {@link LessonDto}
+     */
+    LessonDto downloadLessons(Date startTime, Long userId, Long subjectId, Long campusId);
+
+
+    /**
      * 更新{@link Lesson}
      * @param lesson {@link Lesson}
      * @return {@code true}成功 {@code false}失败

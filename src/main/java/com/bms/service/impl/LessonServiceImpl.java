@@ -10,6 +10,7 @@ import com.bms.service.LessonService;
 import com.bms.service.PeriodService;
 import com.bms.service.SubjectService;
 import com.bms.service.UserService;
+import com.bms.util.CommonUtils;
 import com.bms.util.FinalName;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.bms.util.CommonUtils.*;
 
@@ -141,37 +144,86 @@ public class LessonServiceImpl implements LessonService {
             lessonDto.setPlans(plans);
             value.forEach((period, value1) -> plans.forEach(plan -> {
                 if (plan.getPeriod().equals(period)) {
-                    value1.forEach((index, value2) -> {
-                        switch (index) {
-                            case 0:
-                                plan.setMon(value2);
-                                break;
-                            case 1:
-                                plan.setTue(value2);
-                                break;
-                            case 2:
-                                plan.setWed(value2);
-                                break;
-                            case 3:
-                                plan.setThurs(value2);
-                                break;
-                            case 4:
-                                plan.setFri(value2);
-                                break;
-                            case 5:
-                                plan.setSat(value2);
-                                break;
-                            case 6:
-                                plan.setSun(value2);
-                                break;
-                            default:
-                                break;
-                        }
-                    });
+                    setPlan(value1, plan);
                 }
             }));
         });
         return lessonDtos;
+    }
+
+    private void setPlan(Map<Integer, List<Lesson>> value1, PlanDto plan) {
+        value1.forEach((index, value2) -> {
+            switch (index) {
+                case 0:
+                    plan.setMon(value2);
+                    break;
+                case 1:
+                    plan.setTue(value2);
+                    break;
+                case 2:
+                    plan.setWed(value2);
+                    break;
+                case 3:
+                    plan.setThurs(value2);
+                    break;
+                case 4:
+                    plan.setFri(value2);
+                    break;
+                case 5:
+                    plan.setSat(value2);
+                    break;
+                case 6:
+                    plan.setSun(value2);
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
+
+    @Override
+    public LessonDto downloadLessons(Date startTime, Long userId, Long subjectId, Long campusId) {
+        Lesson lesson = new Lesson();
+        if (startTime != null) {
+            lesson.setWeek(getWeekOfYear(startTime));
+        }
+        if (userId != null) {
+            lesson.setUserId(userId);
+        }
+        if (subjectId != null) {
+            lesson.setSubjectId(subjectId);
+        }
+        if (campusId != null) {
+            lesson.setCampusId(campusId);
+        }
+        List<Lesson> lessons = selectLessons(lesson);
+        // 按时间段分组
+        Map<String, List<Lesson>> listMap = selectLessons(lesson).stream()
+                .collect(Collectors.groupingBy(lesson1 -> {
+            String start = CommonUtils.formatDateTime(lesson1.getStartTime());
+            String end = CommonUtils.formatDateTime(lesson1.getEndTime());
+            return start + "-" + end;
+        }));
+        // 时间段排序
+        Map<String, Map<Integer, List<Lesson>>> resultMap = new TreeMap<>(Comparator.naturalOrder());
+        //按周几分组
+        listMap.forEach((period, values) -> resultMap.put(period,
+                values.stream().collect(Collectors.groupingBy(lesson2 -> lesson2.getStartTime().getDayOfWeek().getValue() - 1))));
+
+        LessonDto lessonDto = new LessonDto();
+        lessonDto.setWeek(lessons.get(0).getWeek());
+        lessonDto.setMonday(getMondayInWeek(lessons.get(0).getWeek()));
+        List<PlanDto> plans = new ArrayList<>();
+        lessonDto.setPlans(plans);
+
+        resultMap.forEach((period, values) -> {
+            PlanDto plan = new PlanDto();
+            plans.add(plan);
+
+            plan.setPeriod(period);
+            setPlan(values, plan);
+        });
+        return lessonDto;
     }
 
     @Override

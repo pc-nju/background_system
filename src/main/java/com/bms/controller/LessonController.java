@@ -86,6 +86,13 @@ public class LessonController {
                                 @RequestParam(required = false) Long classroomId) {
         return ResultDto.success().setObj(lessonService.getLessons(startTime, userId, subjectId, campusId, classroomId));
     }
+    @GetMapping("/download")
+    public ResultDto downloadLessons(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd")Date startTime,
+                                @RequestParam(required = false) Long userId,
+                                @RequestParam(required = false) Long subjectId,
+                                @RequestParam Long campusId) {
+        return ResultDto.success().setObj(lessonService.downloadLessons(startTime, userId, subjectId, campusId));
+    }
 
     @GetMapping("/users")
     public ResultDto getAllUsers() {
