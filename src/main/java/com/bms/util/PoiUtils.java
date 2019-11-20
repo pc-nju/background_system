@@ -42,6 +42,9 @@ public final class PoiUtils {
     private static final String SHEET_NAME = "学生信息表.xls";
     private static Map<Long, String> subjectIdMap;
     private static Map<String, Long> subjectNameMap;
+    /**
+     * Reflector 工厂，可以实现对 Reflector 缓存（Reflector对象是对类进行封装，可以获取所有的属性、getter/setter 方法）
+     */
     private static ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
 
     static {
@@ -57,6 +60,7 @@ public final class PoiUtils {
     public static List<Student> importEmp2List(MultipartFile file, List<Subject> subjects) {
         translateSubjects2Map(subjects);
 
+        //1、获取 Student 对应的 Reflector 对象
         Reflector studentReflector = reflectorFactory.findForClass(Student.class);
 
         List<Student> students = new ArrayList<>();
@@ -81,24 +85,31 @@ public final class PoiUtils {
                     student = new Student();
                     for (int k = 0; k < physicalNumberOfCells; k++) {
                         HSSFCell cell = row.getCell(k);
+                        //2、根据所在列获取该列对应的枚举类，从而获取属性名
                         String propertyName = StudentEnum.getStudentEnum(k).getEnName();
+                        //3、判断该类是否有 setter 方法，没有则无法设置属性值
                         if (studentReflector.hasSetter(propertyName)) {
+                            //4、获取属性对应的 set 方法 对应的 MethodInvoker 对象
                             Invoker invoker = studentReflector.getSetInvoker(propertyName);
+                            //5、获取属性对应的 set 方法 对应的 参数类型
                             Class<?> setterType = studentReflector.getSetterType(propertyName);
                             switch (cell.getCellTypeEnum()) {
                                 case STRING:
                                     String cellValue = cell.getStringCellValue();
                                     if (StringUtils.isNoneBlank(cellValue)) {
                                         if (Integer.class.equals(setterType)) {
-                                            //todo：研究研究类型强转
+                                            //6、通过反射将值设置到对应的属性
                                             invoker.invoke(student, new Object[]{Integer.valueOf(cellValue)});
                                         } else {
                                             if ("subjectIds".equals(propertyName)) {
                                                 List<Long> subjectIds = translateSubjectNames2Id(cellValue);
+                                                //6、通过反射将值设置到对应的属性
                                                 invoker.invoke(student, new Object[]{subjectIds == null ? null : subjectIds.toArray(new Long[subjectIds.size()])});
                                             } else if ("studyState".equals(propertyName)) {
+                                                //6、通过反射将值设置到对应的属性
                                                 invoker.invoke(student, new Object[]{STUDY_STATE_MAP.get(cellValue)});
                                             } else {
+                                                //6、通过反射将值设置到对应的属性
                                                 invoker.invoke(student, new Object[]{cellValue});
                                             }
                                         }
@@ -106,11 +117,11 @@ public final class PoiUtils {
                                     break;
                                 default:
                                     if (cell.getDateCellValue() != null) {
+                                        //6、通过反射将值设置到对应的属性
                                         invoker.invoke(student, new Object[]{CommonUtils.date2LocalDate(cell.getDateCellValue())});
                                     }
                                     break;
                             }
-
                         }
                     }
                     students.add(student);
