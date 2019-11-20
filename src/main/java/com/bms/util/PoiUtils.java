@@ -2,8 +2,13 @@ package com.bms.util;
 
 import com.bms.entity.Student;
 import com.bms.entity.Subject;
+import com.bms.entity.enu.StudentEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.reflection.DefaultReflectorFactory;
+import org.apache.ibatis.reflection.Reflector;
+import org.apache.ibatis.reflection.ReflectorFactory;
+import org.apache.ibatis.reflection.invoker.Invoker;
 import org.apache.poi.hpsf.DocumentSummaryInformation;
 import org.apache.poi.hpsf.SummaryInformation;
 import org.apache.poi.hssf.usermodel.*;
@@ -19,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
@@ -36,6 +42,7 @@ public final class PoiUtils {
     private static final String SHEET_NAME = "学生信息表.xls";
     private static Map<Long, String> subjectIdMap;
     private static Map<String, Long> subjectNameMap;
+    private static ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
 
     static {
         STUDY_STATE_MAP.put("正在学习", Boolean.TRUE);
@@ -49,6 +56,9 @@ public final class PoiUtils {
      */
     public static List<Student> importEmp2List(MultipartFile file, List<Subject> subjects) {
         translateSubjects2Map(subjects);
+
+        Reflector studentReflector = reflectorFactory.findForClass(Student.class);
+
         List<Student> students = new ArrayList<>();
         try {
             HSSFWorkbook workbook = new HSSFWorkbook(new POIFSFileSystem(file.getInputStream()));
@@ -71,66 +81,36 @@ public final class PoiUtils {
                     student = new Student();
                     for (int k = 0; k < physicalNumberOfCells; k++) {
                         HSSFCell cell = row.getCell(k);
-                        switch (cell.getCellTypeEnum()) {
-                            case STRING: {
-                                String cellValue = cell.getStringCellValue();
-                                if (cellValue == null) {
-                                    cellValue = "";
-                                }
-                                switch (k) {
-                                    case 0:
-                                        student.setName(cellValue);
-                                        break;
-                                    case 1:
-                                        student.setIdCard(cellValue);
-                                        break;
-                                    case 2:
-                                        student.setAge(Integer.valueOf(cellValue));
-                                        break;
-                                    case 3:
-                                        student.setGender(cellValue);
-                                        break;
-                                    case 4:
-                                        student.setParentName(cellValue);
-                                        break;
-                                    case 5:
-                                        student.setParentPhone(cellValue);
-                                        break;
-                                    case 6:
-                                        List<Long> subjectIds = translateSubjectNames2Id(cellValue);
-                                        student.setSubjectIds(subjectIds == null ? null : subjectIds.toArray(new Long[subjectIds.size()]));
-                                        break;
-                                    case 7:
-                                        student.setRegisterPrice(Integer.valueOf(cellValue));
-                                        break;
-                                    case 11:
-                                        student.setStudyState(STUDY_STATE_MAP.get(cellValue));
-                                        break;
-                                    default:
-                                        break;
-                                }
+                        String propertyName = StudentEnum.getStudentEnum(k).getEnName();
+                        if (studentReflector.hasSetter(propertyName)) {
+                            Invoker invoker = studentReflector.getSetInvoker(propertyName);
+                            Class<?> setterType = studentReflector.getSetterType(propertyName);
+                            switch (cell.getCellTypeEnum()) {
+                                case STRING:
+                                    String cellValue = cell.getStringCellValue();
+                                    if (StringUtils.isNoneBlank(cellValue)) {
+                                        if (Integer.class.equals(setterType)) {
+                                            //todo：研究研究类型强转
+                                            invoker.invoke(student, new Object[]{Integer.valueOf(cellValue)});
+                                        } else {
+                                            if ("subjectIds".equals(propertyName)) {
+                                                List<Long> subjectIds = translateSubjectNames2Id(cellValue);
+                                                invoker.invoke(student, new Object[]{subjectIds == null ? null : subjectIds.toArray(new Long[subjectIds.size()])});
+                                            } else if ("studyState".equals(propertyName)) {
+                                                invoker.invoke(student, new Object[]{STUDY_STATE_MAP.get(cellValue)});
+                                            } else {
+                                                invoker.invoke(student, new Object[]{cellValue});
+                                            }
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    if (cell.getDateCellValue() != null) {
+                                        invoker.invoke(student, new Object[]{CommonUtils.date2LocalDate(cell.getDateCellValue())});
+                                    }
+                                    break;
                             }
-                                break;
-                            default:
-                            {
-                                switch (k) {
-                                    case 8:
-                                        student.setRegisterDate(CommonUtils.date2LocalDate(cell.getDateCellValue()));
-                                        break;
-                                    case 9:
-                                        student.setBeginDate(CommonUtils.date2LocalDate(cell.getDateCellValue()));
-                                        break;
-                                    case 10:
-                                        student.setEndDate(CommonUtils.date2LocalDate(cell.getDateCellValue()));
-                                        break;
-                                    case 12:
-                                        student.setPauseDate(CommonUtils.date2LocalDate(cell.getDateCellValue()));
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
-                                break;
+
                         }
                     }
                     students.add(student);
@@ -138,6 +118,8 @@ public final class PoiUtils {
             }
         } catch (IOException e) {
             log.error("读取文件报错：", e);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
         }
         return students;
     }
