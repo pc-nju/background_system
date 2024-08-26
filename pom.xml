@@ -21,7 +21,7 @@
 		<druid.version>1.1.10</druid.version>
 		<log4j.version>1.2.17</log4j.version>
 		<mapstruct.version>1.2.0.Final</mapstruct.version>
-		<swagger.version>2.8.0</swagger.version>
+		<swagger.version>2.10.0</swagger.version>
 	</properties>
 
 	<dependencies>
